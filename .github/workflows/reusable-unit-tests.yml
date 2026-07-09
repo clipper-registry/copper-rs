@@ -162,6 +162,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Volume push chunking peaks at ~2x the target size, which can overflow
+      # a stock runner's ~25GB free. Remove unused preinstalled toolchains in
+      # the background; only the push at the end needs the space, so nothing
+      # waits on it here and the push step waits on the pidfile.
+      - name: Reclaim runner disk space (background)
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/.ghcup /usr/share/swift \
+            >/dev/null 2>&1 &
+          echo $! > /tmp/clipper-reclaim.pid
       - id: rust_ci_setup
         uses: ./.github/actions/rust-ci-setup
         with:
@@ -173,6 +185,12 @@ jobs:
           cache_shared_key: rust-ubuntu-latest
           install_nextest: ${{ matrix.task == 'test' }}
           sccache_write: ${{ matrix.task == 'clippy' }}
+      - name: Mount clipper target cache
+        uses: ./.github/actions/clipper-cache
+        env:
+          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        with:
+          key: unit-${{ matrix.task }}
       - name: Set features (Linux)
         run: |
           echo "FEATURES_FLAG=--features $BASE_FEATURES,python" >> $GITHUB_ENV
@@ -220,6 +238,20 @@ jobs:
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats || true
+      - name: Push clipper target cache
+        if: always()
+        env:
+          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        run: |
+          # Make sure the background disk reclaim has finished freeing space.
+          if [ -f /tmp/clipper-reclaim.pid ]; then
+            while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
+            df -h /
+          fi
+          clipper volume push target "$CLIPPER_CACHE_TAG"
+      - name: Unmount clipper target cache
+        if: always()
+        run: clipper volume unmount target --discard || true
   doctests-linux-container:
     if: inputs.run_linux && inputs.linux_ci_image != ''
     name: Doctests (ubuntu-26.04, debug)
@@ -275,6 +307,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Volume push chunking peaks at ~2x the target size, which can overflow
+      # a stock runner's ~25GB free. Remove unused preinstalled toolchains in
+      # the background; only the push at the end needs the space, so nothing
+      # waits on it here and the push step waits on the pidfile.
+      - name: Reclaim runner disk space (background)
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/.ghcup /usr/share/swift \
+            >/dev/null 2>&1 &
+          echo $! > /tmp/clipper-reclaim.pid
       - id: rust_ci_setup
         uses: ./.github/actions/rust-ci-setup
         with:
@@ -285,6 +329,12 @@ jobs:
           cache_prefix: debug-ubuntu-host
           cache_shared_key: rust-ubuntu-latest
           install_nextest: "false"
+      - name: Mount clipper target cache
+        uses: ./.github/actions/clipper-cache
+        env:
+          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        with:
+          key: doctests
       - name: Detect default workspace exclusions
         run: |
           EXCLUDES=$(python3 support/ci/workspace_excludes.py excludes --toolchain ${{ inputs.toolchain }})
@@ -294,6 +344,20 @@ jobs:
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats || true
+      - name: Push clipper target cache
+        if: always()
+        env:
+          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        run: |
+          # Make sure the background disk reclaim has finished freeing space.
+          if [ -f /tmp/clipper-reclaim.pid ]; then
+            while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
+            df -h /
+          fi
+          clipper volume push target "$CLIPPER_CACHE_TAG"
+      - name: Unmount clipper target cache
+        if: always()
+        run: clipper volume unmount target --discard || true
   unit-linux-cuda-container:
     if: inputs.run_cuda && inputs.linux_cuda_ci_image != ''
     name: Unit Checks / clippy (cuda-ubuntu-24.04, cuda-debug)
@@ -545,6 +609,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Volume push chunking peaks at ~2x the target size, which can overflow
+      # a stock runner's ~25GB free. Remove unused preinstalled toolchains in
+      # the background; only the push at the end needs the space, so nothing
+      # waits on it here and the push step waits on the pidfile.
+      - name: Reclaim runner disk space (background)
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/.ghcup /usr/share/swift \
+            >/dev/null 2>&1 &
+          echo $! > /tmp/clipper-reclaim.pid
       - id: rust_ci_setup
         uses: ./.github/actions/rust-ci-setup
         with:
@@ -556,6 +632,12 @@ jobs:
           cache_shared_key: rust-ubuntu-latest
           install_nextest: "true"
           sccache_write: "true"
+      - name: Mount clipper target cache
+        uses: ./.github/actions/clipper-cache
+        env:
+          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        with:
+          key: all-features
       - name: Set features (Linux)
         run: |
           echo "FEATURES_FLAG=--features $BASE_FEATURES,python" >> $GITHUB_ENV
@@ -568,6 +650,20 @@ jobs:
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats || true
+      - name: Push clipper target cache
+        if: always()
+        env:
+          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        run: |
+          # Make sure the background disk reclaim has finished freeing space.
+          if [ -f /tmp/clipper-reclaim.pid ]; then
+            while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
+            df -h /
+          fi
+          clipper volume push target "$CLIPPER_CACHE_TAG"
+      - name: Unmount clipper target cache
+        if: always()
+        run: clipper volume unmount target --discard || true
   tests-features-linux-cuda-container:
     if: inputs.run_cuda && inputs.linux_cuda_ci_image != ''
     name: Unit Tests (all features) (cuda-ubuntu-24.04, cuda-debug)
