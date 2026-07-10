@@ -252,7 +252,7 @@ jobs:
           # warm run's regenerated-but-tiny churn re-uploads megabytes, not
           # the whole small-file monolith (measured 447MB for 398KB of churn
           # on the doctest cache without this).
-          clipper volume push target "$CLIPPER_CACHE_TAG" \
+          clipper volume push target "$CLIPPER_CACHE_TAG" -j 16 \
             --split-glob 'generated/**' \
             --split-glob 'debug/.fingerprint/**' \
             --split-glob 'debug/incremental/**' \
@@ -366,7 +366,7 @@ jobs:
           # warm run's regenerated-but-tiny churn re-uploads megabytes, not
           # the whole small-file monolith (measured 447MB for 398KB of churn
           # on the doctest cache without this).
-          clipper volume push target "$CLIPPER_CACHE_TAG" \
+          clipper volume push target "$CLIPPER_CACHE_TAG" -j 16 \
             --split-glob 'generated/**' \
             --split-glob 'debug/.fingerprint/**' \
             --split-glob 'debug/incremental/**' \
@@ -680,7 +680,7 @@ jobs:
           # warm run's regenerated-but-tiny churn re-uploads megabytes, not
           # the whole small-file monolith (measured 447MB for 398KB of churn
           # on the doctest cache without this).
-          clipper volume push target "$CLIPPER_CACHE_TAG" \
+          clipper volume push target "$CLIPPER_CACHE_TAG" -j 16 \
             --split-glob 'generated/**' \
             --split-glob 'debug/.fingerprint/**' \
             --split-glob 'debug/incremental/**' \
