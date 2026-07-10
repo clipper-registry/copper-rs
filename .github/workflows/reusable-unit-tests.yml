@@ -248,7 +248,15 @@ jobs:
             while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
             df -h /
           fi
-          clipper volume push target "$CLIPPER_CACHE_TAG"
+          # Split the churny small-file paths into their own tar blobs so a
+          # warm run's regenerated-but-tiny churn re-uploads megabytes, not
+          # the whole small-file monolith (measured 447MB for 398KB of churn
+          # on the doctest cache without this).
+          clipper volume push target "$CLIPPER_CACHE_TAG" \
+            --split-glob 'generated/**' \
+            --split-glob 'debug/.fingerprint/**' \
+            --split-glob 'debug/incremental/**' \
+            --split-glob '.rustc_info.json'
       - name: Unmount clipper target cache
         if: always()
         run: clipper volume unmount target --discard || true
@@ -354,7 +362,15 @@ jobs:
             while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
             df -h /
           fi
-          clipper volume push target "$CLIPPER_CACHE_TAG"
+          # Split the churny small-file paths into their own tar blobs so a
+          # warm run's regenerated-but-tiny churn re-uploads megabytes, not
+          # the whole small-file monolith (measured 447MB for 398KB of churn
+          # on the doctest cache without this).
+          clipper volume push target "$CLIPPER_CACHE_TAG" \
+            --split-glob 'generated/**' \
+            --split-glob 'debug/.fingerprint/**' \
+            --split-glob 'debug/incremental/**' \
+            --split-glob '.rustc_info.json'
       - name: Unmount clipper target cache
         if: always()
         run: clipper volume unmount target --discard || true
@@ -660,7 +676,15 @@ jobs:
             while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
             df -h /
           fi
-          clipper volume push target "$CLIPPER_CACHE_TAG"
+          # Split the churny small-file paths into their own tar blobs so a
+          # warm run's regenerated-but-tiny churn re-uploads megabytes, not
+          # the whole small-file monolith (measured 447MB for 398KB of churn
+          # on the doctest cache without this).
+          clipper volume push target "$CLIPPER_CACHE_TAG" \
+            --split-glob 'generated/**' \
+            --split-glob 'debug/.fingerprint/**' \
+            --split-glob 'debug/incremental/**' \
+            --split-glob '.rustc_info.json'
       - name: Unmount clipper target cache
         if: always()
         run: clipper volume unmount target --discard || true
