@@ -256,10 +256,11 @@ jobs:
             --split-glob 'generated/**' \
             --split-glob 'debug/.fingerprint/**' \
             --split-glob 'debug/incremental/**' \
-            --split-glob '.rustc_info.json'
+            --split-glob '.rustc_info.json' \
+            --cdc
       - name: Unmount clipper target cache
         if: always()
-        run: clipper volume unmount target --discard || true
+        run: clipper volume unmount target || true
   doctests-linux-container:
     if: inputs.run_linux && inputs.linux_ci_image != ''
     name: Doctests (ubuntu-26.04, debug)
@@ -370,10 +371,11 @@ jobs:
             --split-glob 'generated/**' \
             --split-glob 'debug/.fingerprint/**' \
             --split-glob 'debug/incremental/**' \
-            --split-glob '.rustc_info.json'
+            --split-glob '.rustc_info.json' \
+            --cdc
       - name: Unmount clipper target cache
         if: always()
-        run: clipper volume unmount target --discard || true
+        run: clipper volume unmount target || true
   unit-linux-cuda-container:
     if: inputs.run_cuda && inputs.linux_cuda_ci_image != ''
     name: Unit Checks / clippy (cuda-ubuntu-24.04, cuda-debug)
@@ -684,10 +686,11 @@ jobs:
             --split-glob 'generated/**' \
             --split-glob 'debug/.fingerprint/**' \
             --split-glob 'debug/incremental/**' \
-            --split-glob '.rustc_info.json'
+            --split-glob '.rustc_info.json' \
+            --cdc
       - name: Unmount clipper target cache
         if: always()
-        run: clipper volume unmount target --discard || true
+        run: clipper volume unmount target || true
   tests-features-linux-cuda-container:
     if: inputs.run_cuda && inputs.linux_cuda_ci_image != ''
     name: Unit Tests (all features) (cuda-ubuntu-24.04, cuda-debug)
