@@ -53,10 +53,10 @@ on:
 
 env:
   CARGO_NET_RETRY: "10"
-  # Prefetch 8 chunks ahead of the linker's reads through the clipper mount, to
-  # pipeline the cached-closure fetches instead of one round-trip per chunk.
-  # Experiment: measure relink time vs prior (default 1) runs.
-  CLIPPER_READAHEAD: "8"
+  # Prefetch a couple of chunks ahead of the linker's reads to pipeline the
+  # cached-closure fetches. Depth 2 is tuned for 64 MiB chunks (fewer, larger
+  # chunks need far less lookahead than the 8 that suited 8 MiB chunks).
+  CLIPPER_READAHEAD: "2"
 
 jobs:
   unit-linux-container:
