@@ -154,6 +154,8 @@ jobs:
       CARGO_TERM_COLOR: always
       BASE_FEATURES: mock,cu-sensor-payloads/image,kornia,gst,faer,nalgebra,glam,debug_pane,bincode,log-level-debug
       WORKSPACE_SCOPE: workspace
+      # Content-based cache freshness; no mtime hacks needed. Requires nightly.
+      CARGO_UNSTABLE_CHECKSUM_FRESHNESS: "true"
 
     strategy:
       fail-fast: false
@@ -162,8 +164,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       # Volume push chunking peaks at ~2x the target size, which can overflow
       # a stock runner's ~25GB free. Remove unused preinstalled toolchains in
       # the background; only the push at the end needs the space, so nothing
@@ -313,11 +313,11 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       WORKSPACE_SCOPE: workspace
+      # Content-based cache freshness; no mtime hacks needed. Requires nightly.
+      CARGO_UNSTABLE_CHECKSUM_FRESHNESS: "true"
 
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       # Volume push chunking peaks at ~2x the target size, which can overflow
       # a stock runner's ~25GB free. Remove unused preinstalled toolchains in
       # the background; only the push at the end needs the space, so nothing
@@ -624,11 +624,11 @@ jobs:
       CARGO_TERM_COLOR: always
       BASE_FEATURES: mock,cu-sensor-payloads/image,kornia,gst,faer,nalgebra,glam,debug_pane,bincode,log-level-debug
       WORKSPACE_SCOPE: workspace
+      # Content-based cache freshness; no mtime hacks needed. Requires nightly.
+      CARGO_UNSTABLE_CHECKSUM_FRESHNESS: "true"
 
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       # Volume push chunking peaks at ~2x the target size, which can overflow
       # a stock runner's ~25GB free. Remove unused preinstalled toolchains in
       # the background; only the push at the end needs the space, so nothing
