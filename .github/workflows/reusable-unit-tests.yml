@@ -214,12 +214,16 @@ jobs:
         run: |
           EXCLUDES=$(python3 support/ci/workspace_excludes.py excludes --toolchain ${{ inputs.toolchain }})
           echo "WORKSPACE_EXCLUDES=$EXCLUDES" >> $GITHUB_ENV
+      # --warn (not --deny) warnings: this host job runs nightly (for
+      # checksum-freshness), whose clippy is stricter than the stable clippy
+      # copper targets; new lint drift shouldn't fail the build. The stable
+      # container clippy jobs keep --deny warnings.
       - name: Run clippy on (${{ inputs.linux_runner_label }} | debug)
         if: matrix.task == 'clippy'
-        run: cargo +${{ inputs.toolchain }} clippy $RELEASE_FLAG $WORKSPACE_FLAG --all-targets $WORKSPACE_EXCLUDES -- --deny warnings
+        run: cargo +${{ inputs.toolchain }} clippy $RELEASE_FLAG $WORKSPACE_FLAG --all-targets $WORKSPACE_EXCLUDES -- --warn warnings
       - name: Run clippy with all features on (${{ inputs.linux_runner_label }} | debug)
         if: matrix.task == 'clippy'
-        run: cargo +${{ inputs.toolchain }} clippy $RELEASE_FLAG $WORKSPACE_FLAG --all-targets $FEATURES_FLAG $WORKSPACE_EXCLUDES -- --deny warnings
+        run: cargo +${{ inputs.toolchain }} clippy $RELEASE_FLAG $WORKSPACE_FLAG --all-targets $FEATURES_FLAG $WORKSPACE_EXCLUDES -- --warn warnings
       - name: Run Unit Tests on (${{ inputs.linux_runner_label }} | debug)
         if: matrix.task == 'test'
         run: cargo +${{ inputs.toolchain }} nextest run $RELEASE_FLAG --all-targets $WORKSPACE_FLAG $WORKSPACE_EXCLUDES -- --skip test_compile_fail
