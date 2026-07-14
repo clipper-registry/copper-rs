@@ -296,11 +296,12 @@ jobs:
   Unit-Tests-Linux:
     name: Unit Tests
     # Clipper fork: host mode (no CI image -- FUSE mounts don't work inside
-    # GHA job containers) on standard runners.
+    # GHA job containers) on standard runners. Nightly is required for cargo
+    # -Z checksum-freshness (content-based cache freshness, no mtime hacks).
     uses: ./.github/workflows/reusable-unit-tests.yml
     secrets: inherit
     with:
-      toolchain: stable
+      toolchain: nightly
       linux_cargo_paths: true
       linux_disk_workarounds: false
       linux_runner_label: ubuntu-latest
