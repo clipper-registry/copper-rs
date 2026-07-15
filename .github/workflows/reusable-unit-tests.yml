@@ -191,7 +191,7 @@ jobs:
           repo: clipper.dev/clipper/copper-ci-cache-v3
           key: unit-${{ matrix.task }}
           base-branch: master
-          split-glob: generated/**
+          additional-split-glob: generated/**
       - name: Set features (Linux)
         run: |
           echo "FEATURES_FLAG=--features $BASE_FEATURES,python" >> $GITHUB_ENV
@@ -335,7 +335,7 @@ jobs:
           repo: clipper.dev/clipper/copper-ci-cache-v3
           key: doctests
           base-branch: master
-          split-glob: generated/**
+          additional-split-glob: generated/**
       - name: Detect default workspace exclusions
         run: |
           EXCLUDES=$(python3 support/ci/workspace_excludes.py excludes --toolchain ${{ inputs.toolchain }})
@@ -634,7 +634,7 @@ jobs:
           repo: clipper.dev/clipper/copper-ci-cache-v3
           key: all-features
           base-branch: master
-          split-glob: generated/**
+          additional-split-glob: generated/**
       - name: Set features (Linux)
         run: |
           echo "FEATURES_FLAG=--features $BASE_FEATURES,python" >> $GITHUB_ENV
