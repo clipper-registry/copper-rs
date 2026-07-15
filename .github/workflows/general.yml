@@ -297,11 +297,12 @@ jobs:
     name: Unit Tests
     # Clipper fork: host mode (no CI image -- FUSE mounts don't work inside
     # GHA job containers) on standard runners. Nightly is required for cargo
-    # -Z checksum-freshness (content-based cache freshness, no mtime hacks).
+    # -Z checksum-freshness (content-based cache freshness, no mtime hacks);
+    # pinned because floating nightlies ICE (2026-07-14 broke clippy).
     uses: ./.github/workflows/reusable-unit-tests.yml
     secrets: inherit
     with:
-      toolchain: nightly
+      toolchain: nightly-2026-07-13
       linux_cargo_paths: true
       linux_disk_workarounds: false
       linux_runner_label: ubuntu-latest
