@@ -154,8 +154,6 @@ jobs:
       CARGO_TERM_COLOR: always
       BASE_FEATURES: mock,cu-sensor-payloads/image,kornia,gst,faer,nalgebra,glam,debug_pane,bincode,log-level-debug
       WORKSPACE_SCOPE: workspace
-      # Content-based cache freshness; no mtime hacks needed. Requires nightly.
-      CARGO_UNSTABLE_CHECKSUM_FRESHNESS: "true"
 
     strategy:
       fail-fast: false
@@ -186,11 +184,14 @@ jobs:
           install_nextest: ${{ matrix.task == 'test' }}
           sccache_write: ${{ matrix.task == 'clippy' }}
       - name: Mount clipper target cache
-        uses: ./.github/actions/clipper-cache
+        uses: clipper-registry/cache/rust@main
         env:
           CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
         with:
+          repo: clipper.dev/clipper/copper-ci-cache-v3
           key: unit-${{ matrix.task }}
+          base-branch: master
+          split-glob: generated/**
       - name: Set features (Linux)
         run: |
           echo "FEATURES_FLAG=--features $BASE_FEATURES,python" >> $GITHUB_ENV
@@ -242,29 +243,15 @@ jobs:
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats || true
-      - name: Push clipper target cache
+      - name: Wait for disk reclaim
         if: always()
-        env:
-          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        # Push chunking (in the cache action's post step) peaks at ~2x target
+        # size; the background reclaim must have finished freeing space first.
         run: |
-          # Make sure the background disk reclaim has finished freeing space.
           if [ -f /tmp/clipper-reclaim.pid ]; then
             while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
             df -h /
           fi
-          # Split the churny small-file paths into their own tar blobs so a
-          # warm run's regenerated-but-tiny churn re-uploads megabytes, not
-          # the whole small-file monolith (measured 447MB for 398KB of churn
-          # on the doctest cache without this).
-          clipper volume push target "$CLIPPER_CACHE_TAG" -j 16 \
-            --split-glob 'generated/**' \
-            --split-glob 'debug/.fingerprint/**' \
-            --split-glob 'debug/incremental/**' \
-            --split-glob '.rustc_info.json' \
-            --cdc
-      - name: Unmount clipper target cache
-        if: always()
-        run: clipper volume unmount target || true
   doctests-linux-container:
     if: inputs.run_linux && inputs.linux_ci_image != ''
     name: Doctests (ubuntu-26.04, debug)
@@ -317,8 +304,6 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       WORKSPACE_SCOPE: workspace
-      # Content-based cache freshness; no mtime hacks needed. Requires nightly.
-      CARGO_UNSTABLE_CHECKSUM_FRESHNESS: "true"
 
     steps:
       - uses: actions/checkout@v7
@@ -343,11 +328,14 @@ jobs:
           cache_shared_key: rust-ubuntu-latest
           install_nextest: "false"
       - name: Mount clipper target cache
-        uses: ./.github/actions/clipper-cache
+        uses: clipper-registry/cache/rust@main
         env:
           CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
         with:
+          repo: clipper.dev/clipper/copper-ci-cache-v3
           key: doctests
+          base-branch: master
+          split-glob: generated/**
       - name: Detect default workspace exclusions
         run: |
           EXCLUDES=$(python3 support/ci/workspace_excludes.py excludes --toolchain ${{ inputs.toolchain }})
@@ -357,29 +345,15 @@ jobs:
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats || true
-      - name: Push clipper target cache
+      - name: Wait for disk reclaim
         if: always()
-        env:
-          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        # Push chunking (in the cache action's post step) peaks at ~2x target
+        # size; the background reclaim must have finished freeing space first.
         run: |
-          # Make sure the background disk reclaim has finished freeing space.
           if [ -f /tmp/clipper-reclaim.pid ]; then
             while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
             df -h /
           fi
-          # Split the churny small-file paths into their own tar blobs so a
-          # warm run's regenerated-but-tiny churn re-uploads megabytes, not
-          # the whole small-file monolith (measured 447MB for 398KB of churn
-          # on the doctest cache without this).
-          clipper volume push target "$CLIPPER_CACHE_TAG" -j 16 \
-            --split-glob 'generated/**' \
-            --split-glob 'debug/.fingerprint/**' \
-            --split-glob 'debug/incremental/**' \
-            --split-glob '.rustc_info.json' \
-            --cdc
-      - name: Unmount clipper target cache
-        if: always()
-        run: clipper volume unmount target || true
   unit-linux-cuda-container:
     if: inputs.run_cuda && inputs.linux_cuda_ci_image != ''
     name: Unit Checks / clippy (cuda-ubuntu-24.04, cuda-debug)
@@ -628,8 +602,6 @@ jobs:
       CARGO_TERM_COLOR: always
       BASE_FEATURES: mock,cu-sensor-payloads/image,kornia,gst,faer,nalgebra,glam,debug_pane,bincode,log-level-debug
       WORKSPACE_SCOPE: workspace
-      # Content-based cache freshness; no mtime hacks needed. Requires nightly.
-      CARGO_UNSTABLE_CHECKSUM_FRESHNESS: "true"
 
     steps:
       - uses: actions/checkout@v7
@@ -655,11 +627,14 @@ jobs:
           install_nextest: "true"
           sccache_write: "true"
       - name: Mount clipper target cache
-        uses: ./.github/actions/clipper-cache
+        uses: clipper-registry/cache/rust@main
         env:
           CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
         with:
+          repo: clipper.dev/clipper/copper-ci-cache-v3
           key: all-features
+          base-branch: master
+          split-glob: generated/**
       - name: Set features (Linux)
         run: |
           echo "FEATURES_FLAG=--features $BASE_FEATURES,python" >> $GITHUB_ENV
@@ -672,29 +647,15 @@ jobs:
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats || true
-      - name: Push clipper target cache
+      - name: Wait for disk reclaim
         if: always()
-        env:
-          CLIPPER_CREDENTIALS: ${{ secrets.CLIPPER_CI_CREDENTIALS }}
+        # Push chunking (in the cache action's post step) peaks at ~2x target
+        # size; the background reclaim must have finished freeing space first.
         run: |
-          # Make sure the background disk reclaim has finished freeing space.
           if [ -f /tmp/clipper-reclaim.pid ]; then
             while ps -p "$(cat /tmp/clipper-reclaim.pid)" >/dev/null 2>&1; do sleep 1; done
             df -h /
           fi
-          # Split the churny small-file paths into their own tar blobs so a
-          # warm run's regenerated-but-tiny churn re-uploads megabytes, not
-          # the whole small-file monolith (measured 447MB for 398KB of churn
-          # on the doctest cache without this).
-          clipper volume push target "$CLIPPER_CACHE_TAG" -j 16 \
-            --split-glob 'generated/**' \
-            --split-glob 'debug/.fingerprint/**' \
-            --split-glob 'debug/incremental/**' \
-            --split-glob '.rustc_info.json' \
-            --cdc
-      - name: Unmount clipper target cache
-        if: always()
-        run: clipper volume unmount target || true
   tests-features-linux-cuda-container:
     if: inputs.run_cuda && inputs.linux_cuda_ci_image != ''
     name: Unit Tests (all features) (cuda-ubuntu-24.04, cuda-debug)
