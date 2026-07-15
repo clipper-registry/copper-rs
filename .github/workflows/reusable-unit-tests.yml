@@ -182,7 +182,9 @@ jobs:
           cache_prefix: debug-ubuntu-host
           cache_shared_key: rust-ubuntu-latest
           install_nextest: ${{ matrix.task == 'test' }}
-          sccache_write: ${{ matrix.task == 'clippy' }}
+          # sccache refuses to run with CARGO_INCREMENTAL=1 (set by the cache
+          # preset); the incremental cache replaces it on this job.
+          sccache: "false"
       - name: Mount clipper target cache
         uses: clipper-registry/cache/rust@main
         env:
@@ -327,6 +329,9 @@ jobs:
           cache_prefix: debug-ubuntu-host
           cache_shared_key: rust-ubuntu-latest
           install_nextest: "false"
+          # sccache refuses to run with CARGO_INCREMENTAL=1 (set by the cache
+          # preset); the incremental cache replaces it on this job.
+          sccache: "false"
       - name: Mount clipper target cache
         uses: clipper-registry/cache/rust@main
         env:
@@ -625,7 +630,9 @@ jobs:
           cache_prefix: debug-ubuntu-host
           cache_shared_key: rust-ubuntu-latest
           install_nextest: "true"
-          sccache_write: "true"
+          # sccache refuses to run with CARGO_INCREMENTAL=1 (set by the cache
+          # preset); the incremental cache replaces it on this job.
+          sccache: "false"
       - name: Mount clipper target cache
         uses: clipper-registry/cache/rust@main
         env:
