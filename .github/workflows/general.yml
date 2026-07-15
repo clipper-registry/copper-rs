@@ -27,6 +27,9 @@ env:
 jobs:
   linux-ci-image:
     name: Linux CI Image
+    # Disabled in the clipper fork: cached jobs run in host mode (FUSE mounts
+    # are not available inside GHA job containers).
+    if: github.repository == 'copper-project/copper-rs'
     runs-on: ubuntu-latest-m
     permissions:
       contents: read
@@ -121,6 +124,7 @@ jobs:
 
   linux-cuda-ci-image:
     name: Linux CUDA CI Image
+    if: github.repository == 'copper-project/copper-rs'
     runs-on: ubuntu-latest-m
     permissions:
       contents: read
@@ -276,6 +280,7 @@ jobs:
 
   Unit-Tests-Other:
     name: Unit Tests
+    if: github.repository == 'copper-project/copper-rs'
     uses: ./.github/workflows/reusable-unit-tests.yml
     secrets: inherit
     with:
@@ -290,15 +295,17 @@ jobs:
 
   Unit-Tests-Linux:
     name: Unit Tests
-    needs: linux-ci-image
+    # Clipper fork: host mode (no CI image -- FUSE mounts don't work inside
+    # GHA job containers) on standard runners. Nightly is required for cargo
+    # -Z checksum-freshness (content-based cache freshness, no mtime hacks);
+    # pinned because floating nightlies ICE (2026-07-14 broke clippy).
     uses: ./.github/workflows/reusable-unit-tests.yml
     secrets: inherit
     with:
-      toolchain: stable
+      toolchain: nightly-2026-07-13
       linux_cargo_paths: true
       linux_disk_workarounds: false
-      linux_ci_image: ${{ needs.linux-ci-image.outputs.image }}
-      linux_runner_label: ubuntu-latest-m
+      linux_runner_label: ubuntu-latest
       linux_light_runner_label: ubuntu-latest
       windows_runner_label: windows-latest-l
       run_linux: true
@@ -442,6 +449,7 @@ jobs:
 
   api:
     name: Public API Check
+    if: github.repository == 'copper-project/copper-rs'
     runs-on: ubuntu-latest
     env:
       PUBLIC_API_VERSION: "0.51.0"
@@ -498,6 +506,7 @@ jobs:
 
   embedded:
     name: CI for embedded targets
+    if: github.repository == 'copper-project/copper-rs'
     uses: ./.github/workflows/reusable-embedded.yml
     with:
       toolchain: stable
