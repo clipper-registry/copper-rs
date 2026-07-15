@@ -192,7 +192,6 @@ jobs:
         with:
           repo: clipper.dev/clipper/copper-ci-cache-v3
           key: unit-${{ matrix.task }}
-          base-branch: master
           additional-split-glob: generated/**
       - name: Set features (Linux)
         run: |
@@ -339,7 +338,6 @@ jobs:
         with:
           repo: clipper.dev/clipper/copper-ci-cache-v3
           key: doctests
-          base-branch: master
           additional-split-glob: generated/**
       - name: Detect default workspace exclusions
         run: |
@@ -640,7 +638,6 @@ jobs:
         with:
           repo: clipper.dev/clipper/copper-ci-cache-v3
           key: all-features
-          base-branch: master
           additional-split-glob: generated/**
       - name: Set features (Linux)
         run: |
